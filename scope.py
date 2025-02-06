@@ -1,3 +1,4 @@
+# ce programme est un exemple de programme python qui utilise des fonctions et des variables globales
 import time
 i = 0
 ma_variable_argument = "ma_variable_argument"
