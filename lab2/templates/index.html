@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED and Button </title>
+    <style>
+        body {
+            background-color: #1b1a1a;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        center{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .breadboard {
+            display: inline-block;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+        .led {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 20px auto;
+            background-color: rgb(255, 0, 0);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .led.on {
+            background-color: rgb(0, 255, 38);
+            box-shadow: 0 0 20px rgb(0, 255, 89);
+        }
+        .button {
+            width: 100px;
+            height: 50px;
+            margin: 20px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:active {
+            background-color: #0056b3;
+        }
+        h1{
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <h1>LED and Button Control</h1>
+        <div class="breadboard">
+            <div class="led {{ 'on' if led_state else '' }}"></div>
+            <form method="POST">
+                <button class="button" name="action" value="turn_on">Turn ON LED</button>
+                <button class="button" name="action" value="turn_off">Turn OFF LED</button>
+            </form>
+            <p>Button state: <strong>{{ 'PRESSED' if button_state == 0 else 'NOT PRESSED' }}</strong></p>
+        </div>
+    </center>
+</body>
+</html>
