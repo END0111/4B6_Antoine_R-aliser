@@ -15,3 +15,4 @@ while mybool:
         print(w)
         counter -= 1
         time.sleep(timer)
+# THIS IS NOT THE CHAIR
