@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Robot rond</title>
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 25vh;
+                font-size: 2em;
+            }
+            .row {
+                display: flex;
+            }
+            .button {
+                padding: 10px 20px;
+                margin: 5px;
+                cursor: pointer;
+                border: 1px solid #ccc;
+                background-color: #f0f0f0;
+                font-size: 1em;
+                text-align: center;
+            }
+            .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            }
+ 
+            .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            }
+ 
+            .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+            }
+ 
+            .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            }
+ 
+            input:checked + .slider {
+            background-color: #2196F3;
+            }
+ 
+            input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+            }
+ 
+            input:checked + .slider:before {
+            transform: translateX(26px);
+            }
+        </style>
+        <script>
+            function sendCommand(command) {
+                fetch('/control/' + command)
+                    .then(response => response.text())
+                    .then(data => console.log(data))
+                    .catch(error => console.error('Error:', error));
+            }
+        </script>
+    </head>
+    <body>
+ 
+        <!-- UI -->
+        <p id='debugTxtId'>...</p></br>
+        <p>OpenCV:</p>
+        <label class="switch">
+            <input type="checkbox" id="openCvSwitch" onchange="onToggleOpenCv()">
+            <span class="slider"></span>
+        </label>
+        <div class="container">
+            <div class="row">
+                <div class="button" onclick="onClickAvancer()">⬆️</div>
+            </div>
+            <div class="row">
+                <div class="button" onclick="onClickGauche()">⬅️</div>
+                <div class="button" onclick="onClickStop()">🛑</div>
+                <div class="button" onclick="onClickDroite()">➡️</div>
+            </div>
+            <div class="row">
+                <div class="button" onclick="onClickReculer()">⬇️</div>
+            </div>
+        </div>
+        <p>Direction gauche:</p>
+        <label class="switch">
+            <input type="checkbox" id="dirGaucheSwitch" onchange="onToggleIO()">
+            <span class="slider"></span>
+        </label>
+        <p>Vitesse gauche:</p>
+        <label class="switch">
+            <input type="checkbox" id="vitGaucheSwitch" onchange="onToggleIO()">
+            <span class="slider"></span>
+        </label>
+        <p>Direction droite:</p>
+        <label class="switch">
+            <input type="checkbox" id="dirDroiteSwitch" onchange="onToggleIO()">
+            <span class="slider"></span>
+        </label>
+        <p>Vitesse droite:</p>
+        <label class="switch">
+            <input type="checkbox" id="vitDroiteSwitch" onchange="onToggleIO()">
+            <span class="slider"></span>
+        </label>
+       
+        <!-- Javascript -->
+        <script>    
+ 
+            class IOs {
+                constructor(dirGauche, vitGauche, dirDroite, vitDroite) {
+                    this.isDirGauche=dirGauche;
+                    this.isVitGauche=vitGauche;
+                    this.isDirDroite=dirDroite;
+                    this.isVitDroite=vitDroite;
+                }              
+            }
+ 
+            class Moteurs {
+                constructor(isLeftPressed, isRightPressed, isForwardPressed, isReversePressed) {
+                    this.isLeftPressed=isLeftPressed;
+                    this.isRightPressed=isRightPressed;
+                    this.isForwardPressed=isForwardPressed;
+                    this.isReversePressed=isReversePressed;
+                }              
+            }
+ 
+            function onClickAvancer() {
+                let moteurs = new Moteurs(true, true, true, true);
+                postMoteurs(moteurs);
+            }
+ 
+            function onClickReculer() {
+                let moteurs = new Moteurs(false, true, false, true);
+                postMoteurs(moteurs);
+            }
+ 
+            function onClickGauche() {
+                let moteurs = new Moteurs(false, true, true, true);
+                postMoteurs(moteurs);
+            }
+ 
+            function onClickDroite() {
+                let moteurs = new Moteurs(true, true, false, true);
+                postMoteurs(moteurs);
+            }
+ 
+            function onClickStop() {
+                let moteurs = new Moteurs(false, false, false, false);
+                postMoteurs(moteurs);
+            }
+ 
+            function postMoteurs(moteurs){
+                const url = 'http://192.168.4.141:5000/moteurs';
+                post(url, moteurs);
+            }
+           
+            function onClickGetIrs(){
+                const url = 'http://192.168.4.141:5000/irs';
+                get(url, function(json) {
+                    //Convertir le string JSON en objet JSON
+                    const data = JSON.parse(json);
+ 
+                    //Imprimer dans le UI
+                    document.getElementById('debugTxtId').innerHTML = data;
+                })
+            }
+ 
+            function post(url, data) {
+                //Préparer la requête POST
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+ 
+                //Envoyer avec JSON dans le body
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                const json = JSON.stringify(data)
+                xhr.send(json);
+ 
+                //Écrire sur le UI pour aider au dépannage
+                document.getElementById('debugTxtId').innerHTML = 'Envoyé: ' + json;
+            }
+           
+            function get(url, callback){
+                //Préparer le URL
+                const requestURL = 'http://192.168.4.141:5000/moteurs';
+                const xhr = new XMLHttpRequest();                
+                xhr.open('GET', requestURL);
+               
+                //Réponse de flask
+                xhr.onload = function() {
+                    //Succès
+                    if (xhr.status === 200) {
+                        //JSON string reçu
+                        const json = xhr.responseText;
+                        callback(json);
+ 
+                        //Écrire sur le UI pour aider au dépannage
+                        document.getElementById('debugTxtId').innerHTML = 'Reçu: ' + json;
+                    }
+                    //Échec
+                    else {
+                        //Écrire sur le UI pour aider au dépannage
+                        document.getElementById('debugTxtId').innerHTML = 'Échec! Code: ' + xhr.status;
+                    }
+                };
+ 
+                //Envoyer à flask
+                xhr.send();
+            }
+ 
+            class OnOff {
+                constructor(isOn) {
+                    this.isOn=isOn;
+                }              
+            }
+ 
+            function onToggleOpenCv() {
+                const openCvSwitch = document.getElementById("openCvSwitch");
+                const url = 'http://192.168.4.141:5000/opencv';
+                if(openCvSwitch.checked){
+                    post(url, new OnOff(true));
+                } else {
+                    post(url, new OnOff(false));
+                }
+            }
+ 
+            function onToggleIO() {
+                const dirGaucheSwitch = document.getElementById("dirGaucheSwitch");
+                const vitGaucheSwitch = document.getElementById("vitGaucheSwitch");
+                const dirDroiteSwitch = document.getElementById("dirDroiteSwitch");
+                const vitDroiteSwitch = document.getElementById("vitDroiteSwitch");
+ 
+                const url = 'http://192.168.4.141:5000/io';
+                post(url, new IOs(
+                    dirGaucheSwitch.checked,
+                    vitGaucheSwitch.checked,
+                    dirDroiteSwitch.checked,
+                    vitDroiteSwitch.checked,
+                ));
+            }
+        </script>
+       
+    </body>
+ 
+</html>
